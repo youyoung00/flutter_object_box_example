@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:objectbox_test/model.dart';
 import 'package:objectbox_test/objectbox.dart';
+import 'components/task_card.dart';
 
 late ObjectBox objectBox;
 
@@ -38,6 +40,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: const Text('Event Management Application'),
       ),
+      body: TaskCard(),
     );
   }
 }
