@@ -1,19 +1,39 @@
-import 'dart:html';
-
 import 'package:flutter/material.dart';
 
 import '../main.dart';
 import '../model.dart';
 
 class TaskCard extends StatefulWidget {
-  const TaskCard({Key? key}) : super(key: key);
+  final Task task;
+
+  const TaskCard({
+    Key? key,
+    required this.task,
+  }) : super(key: key);
 
   @override
   State<TaskCard> createState() => _TaskCardState();
 }
 
 class _TaskCardState extends State<TaskCard> {
-  bool taskStatus = false;
+  List<Owner> owners = objectBox.ownerBox.getAll();
+  Owner? currentOwner;
+  late bool taskStatus;
+
+  void toggleCheckBox(){
+    bool newStatus = widget.task.setFinished();
+    objectBox.taskBox.put(widget.task);
+    setState(() {
+      taskStatus = newStatus;
+    });
+  }
+
+  @override
+  void initState() {
+    currentOwner = widget.task.owner.target;
+    taskStatus = widget.task.status;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,28 +57,29 @@ class _TaskCardState extends State<TaskCard> {
             scale: 1.3,
             child: Checkbox(
               shape: const CircleBorder(),
-              value: false,
+              value: taskStatus,
               onChanged: (bool? value){
-
+                toggleCheckBox();
               },
             ),
           ),
           Expanded(
-              child: Column(
+            child: Column(
+            // mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Expanded(
                 child: Container(
                   alignment: Alignment.bottomLeft,
                   child: Text(
-                    'Sample Task',
+                    widget.task.text,
                     style: taskStatus
-                      ? TextStyle(
+                      ? const TextStyle(
                         height: 1.0,
                         fontSize: 20,
                         color: Color.fromARGB(255, 73, 73, 73),
                         overflow: TextOverflow.ellipsis,
                         decoration: TextDecoration.lineThrough)
-                      : TextStyle(
+                      : const TextStyle(
                         height: 1.0,
                         fontSize: 20,
                         overflow: TextOverflow.ellipsis,
@@ -66,21 +87,47 @@ class _TaskCardState extends State<TaskCard> {
                   ),
                 ),
               ),
-              PopupMenuButton<MenuElement>(
-                onSelected: (item) => onSelected(context),
-                itemBuilder: (BuildContext context) =>
-                [...MenuItems.itemsFirst.map(buildItem).toList()],
-              )
+
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    children: [
+                      Text(
+                        "Assigned to: ${currentOwner?.name}",
+                        style: taskStatus
+                            ? const TextStyle(
+                                fontSize: 15.0,
+                                height: 1.0,
+                                color: Color.fromARGB(255, 106, 106, 106),
+                                decoration: TextDecoration.lineThrough)
+                            : const TextStyle(
+                                fontSize: 15.0,
+                                height: 1.0,
+                                overflow: TextOverflow.fade,
+                              ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
             ],
-          ))
+          )),
+          PopupMenuButton<MenuElement>(
+            onSelected: (item) => onSelected(context, widget.task),
+            itemBuilder: (BuildContext context) =>
+            [...MenuItems.itemsFirst.map(buildItem).toList()],
+          )
         ],
       ),
     );
   }
   PopupMenuItem<MenuElement> buildItem(MenuElement item) =>
       PopupMenuItem<MenuElement>(value: item, child: Text(item.text!));
-  void onSelected(BuildContext context) {
-    debugPrint("Task deleted");
+
+  void onSelected(BuildContext context, Task task) {
+    objectBox.taskBox.remove(task.id);
+    debugPrint("Task ${task.text} deleted");
   }
 }
 
