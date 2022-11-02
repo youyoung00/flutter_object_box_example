@@ -27,11 +27,11 @@ class ObjectBox {
     Owner owner1 = Owner('Eren');
     Owner owner2 = Owner('Annie');
 
-    Task task1 = Task('This is Annie\'s task.');
-    task1.owner.target = owner1;
+    Task task1 = Task('This is a shared task.');
+    task1.owner.addAll([owner1, owner2]);
 
     Task task2 = Task('This is Eren\'s task.');
-    task2.owner.target = owner2;
+    task2.owner.add(owner1);
 
     // event.tasks.add(task1);
     // event.tasks.add(task2);
@@ -46,9 +46,9 @@ class ObjectBox {
     return ObjectBox._create(store);
   }
 
-  void addTask(String taskText, Owner owner, Event event){
+  void addTask(String taskText, List<Owner> owners, Event event){
     Task newTask = Task(taskText);
-    newTask.owner.target = owner;
+    newTask.owner.addAll(owners);
 
     event.tasks.add(newTask);
     newTask.event.target = event;
@@ -58,7 +58,7 @@ class ObjectBox {
     // taskBox.put(newTask);
 
     debugPrint(
-        "Added Task: ${newTask.text} assined to ${newTask.owner.target?.name} in event: ${event.name}");
+        "Added Task: ${newTask.text} assined to ${newTask.owner.map((owner) => owner.name).join(", ")} in event: ${event.name}");
 
   }
 

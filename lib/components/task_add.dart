@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:objectbox_test/components/owner_list.dart';
 
 import '../main.dart';
 import '../model.dart';
@@ -17,30 +18,28 @@ class _AddTaskState extends State<AddTask> {
   final ownerInputController = TextEditingController();
 
   List<Owner> owners = objectBox.ownerBox.getAll();
-  late Owner currentOwner;
+  List<Owner> currentOwner = [];
 
   @override
   void initState() {
     super.initState();
-    currentOwner = owners[0];
+    // currentOwner = owners[0];
   }
 
-  void updateOwner(int newOwnerId){
-    Owner newCurrentOwner = objectBox.ownerBox.get(newOwnerId)!;
-
-    setState(() {
-      currentOwner = newCurrentOwner;
-    });
-  }
+  // void updateOwner(int newOwnerId){
+  //   Owner newCurrentOwner = objectBox.ownerBox.get(newOwnerId)!;
+  //
+  //   setState(() {
+  //     currentOwner = newCurrentOwner;
+  //   });
+  // }
 
   void createOwner(){
     Owner newOwner = Owner(ownerInputController.text);
     objectBox.ownerBox.put(newOwner);
-    List<Owner> newOwnerList = objectBox.ownerBox.getAll();
 
     setState(() {
-      currentOwner = newOwner;
-      owners = newOwnerList;
+      currentOwner = [newOwner];
     });
   }
 
@@ -71,31 +70,18 @@ class _AddTaskState extends State<AddTask> {
                   "Assign Owner:",
                   style: TextStyle(fontSize: 17),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: DropdownButton<int>(
-                    value: currentOwner.id,
-                    items: owners
-                        .map((e) => DropdownMenuItem(
-                              value: e.id,
-                              child: Text(
-                                e.name,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  height: 1.0,
-                                  overflow: TextOverflow.fade,
-                                ),
-                              )
-                            )).toList(),
-                    onChanged: (value) => {updateOwner(value!)},
+                Expanded(child: Card(child: ownerDisplay(context),))
+              ],
+            ),
+          ),
 
-                    underline: Container(
-                      height: 1.5,
-                      color: Colors.blueAccent,
-                    )
-                  ),
-                ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Row(
+              children: [
+
                 const Spacer(),
+
                 TextButton(
                   onPressed: ((){
                     showDialog(context: context, builder: (BuildContext context ) => AlertDialog(
@@ -104,24 +90,32 @@ class _AddTaskState extends State<AddTask> {
                         controller: ownerInputController,
                         autofocus: true,
                         decoration: const InputDecoration(
-                          hintText: 'Enter the owner name'
+                            hintText: 'Enter the owner name'
                         ),
                       ),
                       actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    createOwner();
-                                     Navigator.of(context).maybePop();
-                                  },
-                                  child: const Text("Submit"),
-                                )
-                              ],
-                            ));
+                        TextButton(
+                          onPressed: () {
+                            createOwner();
+                            Navigator.of(context).maybePop();
+                          },
+                          child: const Text("Submit"),
+                        )
+                      ],
+                    ));
                   }) ,
                   child: const Text("Add Owner",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 )
+                // const Spacer(),
+                // ElevatedButton(
+                //   onPressed: () {
+                //     createTask();
+                //    Navigator.of(context).maybePop();
+                //   },
+                //   child: const Text("Save"),
+                // )
               ],
             ),
           ),
@@ -133,7 +127,7 @@ class _AddTaskState extends State<AddTask> {
                 ElevatedButton(
                   onPressed: () {
                     createTask();
-                   Navigator.of(context).maybePop();
+                    Navigator.of(context).maybePop();
                   },
                   child: const Text("Save"),
                 )
@@ -144,4 +138,43 @@ class _AddTaskState extends State<AddTask> {
       ),
     );
   }
+
+  Widget ownerDisplay(context){
+    dynamic onTap() async {
+      final selectedOwners = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const OwnerList()));
+
+      if (selectedOwners == null) return;
+
+      setState(() {
+        currentOwner = selectedOwners;
+      });
+
+      return selectedOwners;
+    }
+
+    return currentOwner.isEmpty
+        ? buildListTile(title: "No Owner", onTap: onTap)
+        : buildListTile(title: currentOwner.map((owners) => owners.name).join(", "),           onTap: onTap);
+  }
+
+  Widget buildListTile({required String title, required VoidCallback onTap}){
+    return ListTile(
+      onTap: onTap,
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(color: Colors.black, fontSize: 18),
+      ),
+
+      trailing: const Icon(
+        Icons.arrow_drop_down,
+        color: Colors.black,
+        size: 20,
+      ),
+    );
+  }
+
 }

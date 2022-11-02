@@ -37,7 +37,9 @@ final _entities = <ModelEntity>[
             flags: 0)
       ],
       relations: <ModelRelation>[],
-      backlinks: <ModelBacklink>[]),
+      backlinks: <ModelBacklink>[
+        ModelBacklink(name: 'tasks', srcEntity: 'Task', srcField: '')
+      ]),
   ModelEntity(
       id: const IdUid(2, 1533058803603632668),
       name: 'Task',
@@ -60,13 +62,6 @@ final _entities = <ModelEntity>[
             type: 1,
             flags: 0),
         ModelProperty(
-            id: const IdUid(4, 6450055493171713101),
-            name: 'ownerId',
-            type: 11,
-            flags: 520,
-            indexId: const IdUid(1, 1394791230895840638),
-            relationTarget: 'Owner'),
-        ModelProperty(
             id: const IdUid(5, 2952612024167148993),
             name: 'eventId',
             type: 11,
@@ -74,7 +69,12 @@ final _entities = <ModelEntity>[
             indexId: const IdUid(2, 3190309154962801152),
             relationTarget: 'Event')
       ],
-      relations: <ModelRelation>[],
+      relations: <ModelRelation>[
+        ModelRelation(
+            id: const IdUid(1, 1734379258194308532),
+            name: 'owner',
+            targetId: const IdUid(1, 2068069720450123163))
+      ],
       backlinks: <ModelBacklink>[]),
   ModelEntity(
       id: const IdUid(3, 2376623300543395435),
@@ -131,11 +131,11 @@ ModelDefinition getObjectBoxModel() {
       entities: _entities,
       lastEntityId: const IdUid(3, 2376623300543395435),
       lastIndexId: const IdUid(2, 3190309154962801152),
-      lastRelationId: const IdUid(0, 0),
+      lastRelationId: const IdUid(1, 1734379258194308532),
       lastSequenceId: const IdUid(0, 0),
       retiredEntityUids: const [],
-      retiredIndexUids: const [],
-      retiredPropertyUids: const [],
+      retiredIndexUids: const [1394791230895840638],
+      retiredPropertyUids: const [6450055493171713101],
       retiredRelationUids: const [],
       modelVersion: 5,
       modelVersionParserMinimum: 5,
@@ -145,7 +145,8 @@ ModelDefinition getObjectBoxModel() {
     Owner: EntityDefinition<Owner>(
         model: _entities[0],
         toOneRelations: (Owner object) => [],
-        toManyRelations: (Owner object) => {},
+        toManyRelations: (Owner object) =>
+            {RelInfo<Task>.toManyBacklink(1, object.id): object.tasks},
         getId: (Owner object) => object.id,
         setId: (Owner object, int id) {
           object.id = id;
@@ -166,13 +167,15 @@ ModelDefinition getObjectBoxModel() {
               const fb.StringReader(asciiOptimization: true)
                   .vTableGet(buffer, rootOffset, 6, ''),
               id: const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0));
-
+          InternalToManyAccess.setRelInfo(object.tasks, store,
+              RelInfo<Task>.toManyBacklink(1, object.id), store.box<Owner>());
           return object;
         }),
     Task: EntityDefinition<Task>(
         model: _entities[1],
-        toOneRelations: (Task object) => [object.owner, object.event],
-        toManyRelations: (Task object) => {},
+        toOneRelations: (Task object) => [object.event],
+        toManyRelations: (Task object) =>
+            {RelInfo<Task>.toMany(1, object.id): object.owner},
         getId: (Task object) => object.id,
         setId: (Task object, int id) {
           object.id = id;
@@ -183,7 +186,6 @@ ModelDefinition getObjectBoxModel() {
           fbb.addInt64(0, object.id);
           fbb.addOffset(1, textOffset);
           fbb.addBool(2, object.status);
-          fbb.addInt64(3, object.owner.targetId);
           fbb.addInt64(4, object.event.targetId);
           fbb.finish(fbb.endTable());
           return object.id;
@@ -198,12 +200,11 @@ ModelDefinition getObjectBoxModel() {
               id: const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0),
               status: const fb.BoolReader()
                   .vTableGet(buffer, rootOffset, 8, false));
-          object.owner.targetId =
-              const fb.Int64Reader().vTableGet(buffer, rootOffset, 10, 0);
-          object.owner.attach(store);
           object.event.targetId =
               const fb.Int64Reader().vTableGet(buffer, rootOffset, 12, 0);
           object.event.attach(store);
+          InternalToManyAccess.setRelInfo(object.owner, store,
+              RelInfo<Task>.toMany(1, object.id), store.box<Task>());
           return object;
         }),
     Event: EntityDefinition<Event>(
@@ -278,13 +279,13 @@ class Task_ {
   /// see [Task.status]
   static final status = QueryBooleanProperty<Task>(_entities[1].properties[2]);
 
-  /// see [Task.owner]
-  static final owner =
-      QueryRelationToOne<Task, Owner>(_entities[1].properties[3]);
-
   /// see [Task.event]
   static final event =
-      QueryRelationToOne<Task, Event>(_entities[1].properties[4]);
+      QueryRelationToOne<Task, Event>(_entities[1].properties[3]);
+
+  /// see [Task.owner]
+  static final owner =
+      QueryRelationToMany<Task, Owner>(_entities[1].relations[0]);
 }
 
 /// [Event] entity fields to define ObjectBox queries.

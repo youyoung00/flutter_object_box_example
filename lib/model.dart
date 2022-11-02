@@ -10,7 +10,8 @@ class Task{
 
   Task(this.text, {this.id = 0, this.status = false});
 
-  final owner = ToOne<Owner>();
+  // final owner = ToOne<Owner>();
+  final owner = ToMany<Owner>();
   final event = ToOne<Event>();
 
   bool setFinished(){
@@ -25,6 +26,9 @@ class Owner{
   int id;
 
   String name;
+
+  @Backlink()
+  final tasks = ToMany<Task>();
 
   Owner(this.name, {this.id = 0});
 }

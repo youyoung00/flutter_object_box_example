@@ -16,8 +16,11 @@ class TaskCard extends StatefulWidget {
 }
 
 class _TaskCardState extends State<TaskCard> {
-  List<Owner> owners = objectBox.ownerBox.getAll();
-  Owner? currentOwner;
+  // List<Owner> owners = objectBox.ownerBox.getAll();
+  // Owner? currentOwner;
+
+  List<Owner> owners = [];
+  String? assignedOwners;
   late bool taskStatus;
 
   void toggleCheckBox(){
@@ -30,7 +33,9 @@ class _TaskCardState extends State<TaskCard> {
 
   @override
   void initState() {
-    currentOwner = widget.task.owner.target;
+
+    owners.addAll(widget.task.owner);
+    assignedOwners = owners.map((owner) => owner.name).join(', ');
     taskStatus = widget.task.status;
     super.initState();
   }
@@ -94,7 +99,7 @@ class _TaskCardState extends State<TaskCard> {
                   child: Row(
                     children: [
                       Text(
-                        "Assigned to: ${currentOwner?.name}",
+                        "Assigned to: $assignedOwners",
                         style: taskStatus
                             ? const TextStyle(
                                 fontSize: 15.0,

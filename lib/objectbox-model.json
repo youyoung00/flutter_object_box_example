@@ -44,14 +44,6 @@
           "type": 1
         },
         {
-          "id": "4:6450055493171713101",
-          "name": "ownerId",
-          "type": 11,
-          "flags": 520,
-          "indexId": "1:1394791230895840638",
-          "relationTarget": "Owner"
-        },
-        {
           "id": "5:2952612024167148993",
           "name": "eventId",
           "type": 11,
@@ -60,7 +52,13 @@
           "relationTarget": "Event"
         }
       ],
-      "relations": []
+      "relations": [
+        {
+          "id": "1:1734379258194308532",
+          "name": "owner",
+          "targetId": "1:2068069720450123163"
+        }
+      ]
     },
     {
       "id": "3:2376623300543395435",
@@ -94,13 +92,17 @@
   ],
   "lastEntityId": "3:2376623300543395435",
   "lastIndexId": "2:3190309154962801152",
-  "lastRelationId": "0:0",
+  "lastRelationId": "1:1734379258194308532",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,
   "retiredEntityUids": [],
-  "retiredIndexUids": [],
-  "retiredPropertyUids": [],
+  "retiredIndexUids": [
+    1394791230895840638
+  ],
+  "retiredPropertyUids": [
+    6450055493171713101
+  ],
   "retiredRelationUids": [],
   "version": 1
 }
