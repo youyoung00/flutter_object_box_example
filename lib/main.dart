@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:objectbox_test/components/event_list_view.dart';
 import 'package:objectbox_test/components/task_list_view.dart';
 import 'package:objectbox_test/model.dart';
 import 'package:objectbox_test/objectbox.dart';
+import 'components/event_add.dart';
 import 'components/task_card.dart';
 import 'components/task_add.dart';
 
@@ -40,16 +42,16 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Event Management Application'),
+        centerTitle: true,
+        title: const Text('Event Management'),
       ),
-      body: TaskList(),
+      body: const EventList(),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async{
-          await Navigator.push(
+        onPressed: (){
+          Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => AddTask()),
+            MaterialPageRoute(builder: (context) => const AddEvent()),
           );
-          setState(() {});
         },
         child: const Icon(Icons.add),
       ),

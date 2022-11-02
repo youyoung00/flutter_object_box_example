@@ -5,7 +5,8 @@ import '../main.dart';
 import '../model.dart';
 
 class TaskList extends StatefulWidget {
-  const TaskList({Key? key}) : super(key: key);
+  final int eventId;
+  const TaskList({Key? key, required this.eventId}) : super(key: key);
 
   @override
   State<TaskList> createState() => _TaskListState();
@@ -16,7 +17,7 @@ class _TaskListState extends State<TaskList> {
   Widget build(BuildContext context) {
     return StreamBuilder<List<Task>>(
       key: UniqueKey(),
-      stream: objectBox.getTasks(),
+      stream: objectBox.getTasksOfEvent(widget.eventId),
       builder: (context, snapshot){
         if(snapshot.data?.isNotEmpty ?? false){
           return ListView.builder(
