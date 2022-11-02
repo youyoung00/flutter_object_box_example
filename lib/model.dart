@@ -11,6 +11,7 @@ class Task{
   Task(this.text, {this.id = 0, this.status = false});
 
   final owner = ToOne<Owner>();
+  final event = ToOne<Event>();
 
   bool setFinished(){
     status = !status;
@@ -26,4 +27,21 @@ class Owner{
   String name;
 
   Owner(this.name, {this.id = 0});
+}
+
+@Entity()
+class Event{
+  @Id()
+  int id;
+  String name;
+
+  @Property(type: PropertyType.date)
+  DateTime? date;
+
+  String? location;
+
+  Event(this.name, {this.id = 0, this.date, this.location});
+
+  @Backlink('event')
+  final tasks = ToMany<Task>();
 }

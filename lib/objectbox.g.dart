@@ -41,7 +41,7 @@ final _entities = <ModelEntity>[
   ModelEntity(
       id: const IdUid(2, 1533058803603632668),
       name: 'Task',
-      lastPropertyId: const IdUid(4, 6450055493171713101),
+      lastPropertyId: const IdUid(5, 2952612024167148993),
       flags: 0,
       properties: <ModelProperty>[
         ModelProperty(
@@ -65,10 +65,48 @@ final _entities = <ModelEntity>[
             type: 11,
             flags: 520,
             indexId: const IdUid(1, 1394791230895840638),
-            relationTarget: 'Owner')
+            relationTarget: 'Owner'),
+        ModelProperty(
+            id: const IdUid(5, 2952612024167148993),
+            name: 'eventId',
+            type: 11,
+            flags: 520,
+            indexId: const IdUid(2, 3190309154962801152),
+            relationTarget: 'Event')
       ],
       relations: <ModelRelation>[],
-      backlinks: <ModelBacklink>[])
+      backlinks: <ModelBacklink>[]),
+  ModelEntity(
+      id: const IdUid(3, 2376623300543395435),
+      name: 'Event',
+      lastPropertyId: const IdUid(4, 2832748012553175265),
+      flags: 0,
+      properties: <ModelProperty>[
+        ModelProperty(
+            id: const IdUid(1, 1532003686557479675),
+            name: 'id',
+            type: 6,
+            flags: 1),
+        ModelProperty(
+            id: const IdUid(2, 9215679538691769816),
+            name: 'name',
+            type: 9,
+            flags: 0),
+        ModelProperty(
+            id: const IdUid(3, 8425589325156819162),
+            name: 'date',
+            type: 10,
+            flags: 0),
+        ModelProperty(
+            id: const IdUid(4, 2832748012553175265),
+            name: 'location',
+            type: 9,
+            flags: 0)
+      ],
+      relations: <ModelRelation>[],
+      backlinks: <ModelBacklink>[
+        ModelBacklink(name: 'tasks', srcEntity: 'Task', srcField: 'event')
+      ])
 ];
 
 /// Open an ObjectBox store with the model declared in this file.
@@ -91,8 +129,8 @@ Future<Store> openStore(
 ModelDefinition getObjectBoxModel() {
   final model = ModelInfo(
       entities: _entities,
-      lastEntityId: const IdUid(2, 1533058803603632668),
-      lastIndexId: const IdUid(1, 1394791230895840638),
+      lastEntityId: const IdUid(3, 2376623300543395435),
+      lastIndexId: const IdUid(2, 3190309154962801152),
       lastRelationId: const IdUid(0, 0),
       lastSequenceId: const IdUid(0, 0),
       retiredEntityUids: const [],
@@ -133,7 +171,7 @@ ModelDefinition getObjectBoxModel() {
         }),
     Task: EntityDefinition<Task>(
         model: _entities[1],
-        toOneRelations: (Task object) => [object.owner],
+        toOneRelations: (Task object) => [object.owner, object.event],
         toManyRelations: (Task object) => {},
         getId: (Task object) => object.id,
         setId: (Task object, int id) {
@@ -141,11 +179,12 @@ ModelDefinition getObjectBoxModel() {
         },
         objectToFB: (Task object, fb.Builder fbb) {
           final textOffset = fbb.writeString(object.text);
-          fbb.startTable(5);
+          fbb.startTable(6);
           fbb.addInt64(0, object.id);
           fbb.addOffset(1, textOffset);
           fbb.addBool(2, object.status);
           fbb.addInt64(3, object.owner.targetId);
+          fbb.addInt64(4, object.event.targetId);
           fbb.finish(fbb.endTable());
           return object.id;
         },
@@ -162,6 +201,56 @@ ModelDefinition getObjectBoxModel() {
           object.owner.targetId =
               const fb.Int64Reader().vTableGet(buffer, rootOffset, 10, 0);
           object.owner.attach(store);
+          object.event.targetId =
+              const fb.Int64Reader().vTableGet(buffer, rootOffset, 12, 0);
+          object.event.attach(store);
+          return object;
+        }),
+    Event: EntityDefinition<Event>(
+        model: _entities[2],
+        toOneRelations: (Event object) => [],
+        toManyRelations: (Event object) => {
+              RelInfo<Task>.toOneBacklink(
+                      5, object.id, (Task srcObject) => srcObject.event):
+                  object.tasks
+            },
+        getId: (Event object) => object.id,
+        setId: (Event object, int id) {
+          object.id = id;
+        },
+        objectToFB: (Event object, fb.Builder fbb) {
+          final nameOffset = fbb.writeString(object.name);
+          final locationOffset = object.location == null
+              ? null
+              : fbb.writeString(object.location!);
+          fbb.startTable(5);
+          fbb.addInt64(0, object.id);
+          fbb.addOffset(1, nameOffset);
+          fbb.addInt64(2, object.date?.millisecondsSinceEpoch);
+          fbb.addOffset(3, locationOffset);
+          fbb.finish(fbb.endTable());
+          return object.id;
+        },
+        objectFromFB: (Store store, ByteData fbData) {
+          final buffer = fb.BufferContext(fbData);
+          final rootOffset = buffer.derefObject(0);
+          final dateValue =
+              const fb.Int64Reader().vTableGetNullable(buffer, rootOffset, 8);
+          final object = Event(
+              const fb.StringReader(asciiOptimization: true)
+                  .vTableGet(buffer, rootOffset, 6, ''),
+              id: const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0),
+              date: dateValue == null
+                  ? null
+                  : DateTime.fromMillisecondsSinceEpoch(dateValue),
+              location: const fb.StringReader(asciiOptimization: true)
+                  .vTableGetNullable(buffer, rootOffset, 10));
+          InternalToManyAccess.setRelInfo(
+              object.tasks,
+              store,
+              RelInfo<Task>.toOneBacklink(
+                  5, object.id, (Task srcObject) => srcObject.event),
+              store.box<Event>());
           return object;
         })
   };
@@ -192,4 +281,24 @@ class Task_ {
   /// see [Task.owner]
   static final owner =
       QueryRelationToOne<Task, Owner>(_entities[1].properties[3]);
+
+  /// see [Task.event]
+  static final event =
+      QueryRelationToOne<Task, Event>(_entities[1].properties[4]);
+}
+
+/// [Event] entity fields to define ObjectBox queries.
+class Event_ {
+  /// see [Event.id]
+  static final id = QueryIntegerProperty<Event>(_entities[2].properties[0]);
+
+  /// see [Event.name]
+  static final name = QueryStringProperty<Event>(_entities[2].properties[1]);
+
+  /// see [Event.date]
+  static final date = QueryIntegerProperty<Event>(_entities[2].properties[2]);
+
+  /// see [Event.location]
+  static final location =
+      QueryStringProperty<Event>(_entities[2].properties[3]);
 }
